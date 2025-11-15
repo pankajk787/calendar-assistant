@@ -54,7 +54,7 @@ async function main() {
     const config = { configurable: { thread_id: '1' } };
     const result = await app.invoke({
         messages: [
-            { role: "human", content: "Create a meeting with Pankaj @10:30 AM tomorrow."},
+            { role: "human", content: "Do I have any meetings scheduled with Pankaj?"},
             { role: "system", content: `You are a personal assisstant. Current date and time ${new Date().toUTCString()}.` }
         ]
     }, config);
