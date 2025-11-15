@@ -51,7 +51,10 @@ const graph = new StateGraph(MessagesAnnotation)
     }
 );
 
-const app = graph.compile();
+// memory for the LLM
+const checkpointer = new MemorySaver();
+
+const app = graph.compile({ checkpointer });
 
 async function main() {
     const config = { configurable: { thread_id: '1' } };
@@ -66,7 +69,7 @@ async function main() {
         }
         const result = await app.invoke({
             messages: [
-                { role: "system", content: `You are a personal assisstant. Current date and time ${new Date().toUTCString()}.` },
+                { role: "system", content: `You are a personal assisstant. You can help schedule events and check what’s on the calendar. You have access to the provided tools. Current date and time ${new Date().toUTCString()}.` },
                 { role: "human", content: userInput },
             ]
         }, config);
