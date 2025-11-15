@@ -42,7 +42,7 @@ export const getEventsTool = tool(async (params) =>{
      * q
      */
     const { timeMin, timeMax, q } = params as GetEventParams;
-    console.log("Called Get Events Tool:", params)
+    // console.log("DEBUG: Called Get Events Tool:", params)
     try{
         const response = await calendar.events.list({
             // calendarId: "pankajadi447@gmail.com"/
@@ -80,7 +80,7 @@ export const getEventsTool = tool(async (params) =>{
 
 export const createEventTool = tool(async ( eventData ) => {
         const { summary, attendees, end, start } = eventData as CreateEventData;
-        console.log("Create event tool called: ", eventData);
+        // console.log("DEBUG: Create event tool called: ", eventData);
         const response = await calendar.events.insert({
             calendarId: "primary",
             sendUpdates: 'all',

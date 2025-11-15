@@ -1,8 +1,11 @@
 import { ChatGroq } from "@langchain/groq";
 import { createEventTool, getEventsTool } from "./tools";
-import { END, MessagesAnnotation, StateGraph } from "@langchain/langgraph";
+import { END, MemorySaver, MessagesAnnotation, StateGraph } from "@langchain/langgraph";
 import { ToolNode } from "@langchain/langgraph/prebuilt";
 import type { AIMessage } from "@langchain/core/messages";
+import readline from "readline/promises";
+
+const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
 
 const tools: any = [createEventTool, getEventsTool];
 
@@ -52,14 +55,26 @@ const app = graph.compile();
 
 async function main() {
     const config = { configurable: { thread_id: '1' } };
-    const result = await app.invoke({
-        messages: [
-            { role: "human", content: "Schedule a Discussion on MERN stack and AI meeting with Pankaj(pankajkumarhzb787@gmail.com) at 11AM on Sunday 16 Nov?"},
-            { role: "system", content: `You are a personal assisstant. Current date and time ${new Date().toUTCString()}.` }
-        ]
-    }, config);
+    
+    console.log("Assistant: Hi, I am your assistant. I can help you schedule events and check what’s on your calendar. How can I help you today?");
+    while(true) {
+        const userInput = await rl.question("You: ");
+        const lcUserInput = userInput.toLowerCase();
+        if(lcUserInput === "bye" || lcUserInput === "quit" || lcUserInput === "exit") {
+            console.log("Assistant: Catch you later! If anything pops up, I’ve got you.");
+            break;
+        }
+        const result = await app.invoke({
+            messages: [
+                { role: "system", content: `You are a personal assisstant. Current date and time ${new Date().toUTCString()}.` },
+                { role: "human", content: userInput },
+            ]
+        }, config);
 
-    const finalMessage = result.messages[result.messages.length - 1];
-    console.log("AI: ", finalMessage?.content);
+        const finalMessage = result.messages[result.messages.length - 1];
+        console.log("Assistant: ", finalMessage?.content);
+    }
+
+    rl.close();
 }
 main();
