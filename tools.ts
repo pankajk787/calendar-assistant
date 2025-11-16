@@ -1,7 +1,6 @@
 import { tool } from "@langchain/core/tools";
 import * as z from "zod";
 import { google } from "googleapis";
-import tokens from "./tokens.json";
 
 type GetEventParams = {
     timeMin: string;
@@ -32,7 +31,10 @@ const oauth2Client = new google.auth.OAuth2(
     process.env.GOOGLE_REDIRECT_URL
 );
 
-oauth2Client.setCredentials(tokens);
+oauth2Client.setCredentials({
+    access_token: process.env.GOOGLE_OAUTH_ACCESS_TOKEN,
+    refresh_token: process.env.GOOGLE_OAUTH_REFRESH_TOKEN
+});
 
 const calendar = google.calendar({ version: 'v3', auth: oauth2Client });
 export const getEventsTool = tool(async (params) =>{
