@@ -1,6 +1,14 @@
 import { tool } from "@langchain/core/tools";
-import * as z from "zod";
 import { google } from "googleapis";
+import {
+    createEventSchema, 
+    deleteEventSchema, 
+    getEventSchema, 
+    updateEventSchema, 
+    type CreateEventData,
+    type DeleteEventData,
+    type UpdateEventData
+} from "./schema";
 
 type GetEventParams = {
     timeMin: string;
@@ -8,22 +16,7 @@ type GetEventParams = {
     q: string;
 }
 
-const createEventSchema = z.object({ 
-    summary: z.string().describe("The title of the event."),
-    start: z.object({
-        dateTime: z.string("The start date time of the event."),
-        timeZone: z.string("Current IANA timezone string.")
-    }),
-    end: z.object({
-        dateTime: z.string("The end date time of the event."),
-        timeZone: z.string("Current IANA timezone string.")
-    }),
-    attendees: z.array(z.object({
-        email: z.string().describe("Te email Id of the attendee"),
-        displayName: z.string().describe("Te display name of the attendee")
-    }))
-});
-type CreateEventData = z.infer<typeof createEventSchema>;
+// type UpdateEventData = CreateEventData & { eventId: string }
 
 const oauth2Client = new google.auth.OAuth2(
     process.env.GOOGLE_CLIENT_ID,
@@ -74,10 +67,7 @@ export const getEventsTool = tool(async (params) =>{
 }, {
     name: 'get-events',
     description: "Call to get the calendar events.",
-    schema: z.object({
-        timeMin: z.string().describe("The 'from' date time to get the events."),
-        timeMax: z.string().describe("The 'to' date time to get the events."),
-        q: z.string().describe("The query to be used to describe get the vents from google calendar. It will be used for free-text search filter. It can be any one of these values: summary, description, location, attendee's display name, attendee's email, organizer's display name, organizer's email.")})
+    schema: getEventSchema
 });
 
 export const createEventTool = tool(async ( eventData ) => {
@@ -114,3 +104,68 @@ export const createEventTool = tool(async ( eventData ) => {
         schema: createEventSchema
     }
 )
+
+export const updateEventTool = tool(async (eventData) => {
+    const { eventId, start, end, summary, attendees } = eventData as UpdateEventData;
+    // console.log("DEBUG PATCH eventData: ", eventData);
+    // Build requestBody only with provided fields
+    const requestBody: any = {};
+
+    if (summary) requestBody.summary = summary;
+    if (start) requestBody.start = start;
+    if (end) requestBody.end = end;
+    if (attendees) requestBody.attendees = attendees;
+
+    // Always include Meet link creation unless you want to make this optional
+    requestBody.conferenceData = {
+      createRequest: {
+        requestId: crypto.randomUUID(),
+        conferenceSolutionKey: {
+          type: "hangoutsMeet",
+        },
+      },
+    };
+
+    const response = await calendar.events.patch({
+      calendarId: "primary",
+      eventId,
+      sendUpdates: "all",
+      conferenceDataVersion: 1,
+      requestBody,
+    });
+
+    // console.log("DEBUG PATCH event respons: ", response);
+
+    return response.status === 200
+      ? "Meeting updated successfully."
+      : "Failed to update the meeting.";
+  },
+  {
+    name: "update-event",
+    description: "Call to update one or more fields of a Google Calendar event.",
+    schema: updateEventSchema,
+  }
+);
+
+export const deleteEventTool = tool(async (eventData) => {
+    const { eventId } = eventData as DeleteEventData;
+    // console.log("DEBUG DELETE eventData: ", eventData);
+    const response = await calendar.events.delete({
+        calendarId: "primary",
+        eventId,
+        sendUpdates: "all"
+    });
+
+    // console.log("/DEBUG DELETE Event response: ", response)
+
+    if (response.status === 204) {
+      return "Event deleted successfully.";
+    }
+
+    return "Failed to delete the event.";
+}, 
+{
+    name: 'delete-event',
+    description: "Call to delete an event.",
+    schema: deleteEventSchema
+})

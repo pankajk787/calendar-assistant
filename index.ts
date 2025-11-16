@@ -1,5 +1,5 @@
 import { ChatGroq } from "@langchain/groq";
-import { createEventTool, getEventsTool } from "./tools";
+import { createEventTool, deleteEventTool, getEventsTool, updateEventTool } from "./tools";
 import { END, MemorySaver, MessagesAnnotation, StateGraph } from "@langchain/langgraph";
 import { ToolNode } from "@langchain/langgraph/prebuilt";
 import type { AIMessage } from "@langchain/core/messages";
@@ -7,7 +7,7 @@ import readline from "readline/promises";
 
 const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
 
-const tools: any = [createEventTool, getEventsTool];
+const tools: any = [ createEventTool, getEventsTool, updateEventTool, deleteEventTool ];
 
 const model = new ChatGroq({
     model: "openai/gpt-oss-120b",
@@ -71,10 +71,12 @@ async function main() {
         }
         const result = await app.invoke({
             messages: [
-                { role: "system", content: `You are a smart personal assisstant. You can help schedule events and check what’s on the calendar.
-                    You have access to the provided tools. 
-                    Current date time ${currentDateTime}.
-                    Current timezone string ${localtimeZone}`
+                { 
+                    role: "system", 
+                    content: `You are a smart personal assisstant. You can help schedule events and check what’s on the calendar. You can also update and delete events in the calendar.
+                        You have access to the provided tools. 
+                        Current date time ${currentDateTime}.
+                        Current timezone string ${localtimeZone}`
                 },
                 { role: "human", content: userInput },
             ]
