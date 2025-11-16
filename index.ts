@@ -61,6 +61,8 @@ async function main() {
     
     console.log("Assistant: Hi, I am your assistant. I can help you schedule events and check what’s on your calendar. How can I help you today?");
     while(true) {
+        const currentDateTime = new Date().toLocaleString("sv-SE").replace(" ", "T");
+        const localtimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
         const userInput = await rl.question("You: ");
         const lcUserInput = userInput.toLowerCase();
         if(lcUserInput === "bye" || lcUserInput === "quit" || lcUserInput === "exit") {
@@ -69,7 +71,11 @@ async function main() {
         }
         const result = await app.invoke({
             messages: [
-                { role: "system", content: `You are a personal assisstant. You can help schedule events and check what’s on the calendar. You have access to the provided tools. Current date and time ${new Date().toUTCString()}.` },
+                { role: "system", content: `You are a smart personal assisstant. You can help schedule events and check what’s on the calendar.
+                    You have access to the provided tools. 
+                    Current date time ${currentDateTime}.
+                    Current timezone string ${localtimeZone}`
+                },
                 { role: "human", content: userInput },
             ]
         }, config);

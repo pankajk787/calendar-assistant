@@ -12,12 +12,12 @@ type GetEventParams = {
 const createEventSchema = z.object({ 
     summary: z.string().describe("The title of the event."),
     start: z.object({
-        dateTime: z.string("The start date time of the event in UTC format."),
-        timeZone: z.string("The timzone of the event time. e.g. Asia/Kolkata")
+        dateTime: z.string("The start date time of the event."),
+        timeZone: z.string("Current IANA timezone string.")
     }),
     end: z.object({
-        dateTime: z.string("The end date time of the event in UTC format."),
-        timeZone: z.string("The timzone of the event time. e.g. Asia/Kolkata")
+        dateTime: z.string("The end date time of the event."),
+        timeZone: z.string("Current IANA timezone string.")
     }),
     attendees: z.array(z.object({
         email: z.string().describe("Te email Id of the attendee"),
@@ -73,8 +73,8 @@ export const getEventsTool = tool(async (params) =>{
     name: 'get-events',
     description: "Call to get the calendar events.",
     schema: z.object({
-        timeMin: z.string().describe("The from datetime in UTC format for the event."),
-        timeMax: z.string().describe("The to datetime in UTC format for the event."),
+        timeMin: z.string().describe("The 'from' date time to get the events."),
+        timeMax: z.string().describe("The 'to' date time to get the events."),
         q: z.string().describe("The query to be used to describe get the vents from google calendar. It will be used for free-text search filter. It can be any one of these values: summary, description, location, attendee's display name, attendee's email, organizer's display name, organizer's email.")})
 });
 
