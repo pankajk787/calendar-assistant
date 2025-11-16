@@ -1,12 +1,15 @@
 import { tool } from "@langchain/core/tools";
 import { google } from "googleapis";
+import { TavilySearch } from "@langchain/tavily";
 import {
     createEventSchema, 
     deleteEventSchema, 
     getEventSchema, 
+    searchToolSchema, 
     updateEventSchema, 
     type CreateEventData,
     type DeleteEventData,
+    type SearchData,
     type UpdateEventData
 } from "./schema";
 
@@ -168,4 +171,31 @@ export const deleteEventTool = tool(async (eventData) => {
     name: 'delete-event',
     description: "Call to delete an event.",
     schema: deleteEventSchema
+})
+
+
+/**
+ * Web search tool
+ * 
+ */
+
+export const search = new TavilySearch({
+    tavilyApiKey: process.env.TAVILY_API_KEY!,
+    maxResults: 3,
+    topic: "general",
+});
+
+export const webSearchTool = tool(async ({ query } : SearchData) => {
+    // console.log("DEBUG: Serach Query : ", query);
+    const response = await search.invoke({ query });
+    // console.log("DEBUG: Serach Response : ", response);
+    if(response.results?.length) {
+        return JSON.stringify(response.results);
+    }
+    return "Could not fetch information from the internet due to some issue."
+}, 
+{
+    name: 'web-search',
+    description: "Call to fetch information from the internet.",
+    schema: searchToolSchema
 })

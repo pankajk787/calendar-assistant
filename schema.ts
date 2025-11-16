@@ -52,6 +52,11 @@ export const deleteEventSchema = z.object({
   eventId: z.string().describe("The ID of the calendar event being updated."),
 });
 
+export const searchToolSchema = z.object({
+  query: z.string().describe("The query to serch over the internet")
+});
+
 export type CreateEventData = z.infer<typeof createEventSchema>;
 export type UpdateEventData = z.infer<typeof updateEventSchema>;
 export type DeleteEventData = z.infer<typeof deleteEventSchema>;
+export type SearchData = z.infer<typeof searchToolSchema>;

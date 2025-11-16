@@ -1,5 +1,5 @@
 import { ChatGroq } from "@langchain/groq";
-import { createEventTool, deleteEventTool, getEventsTool, updateEventTool } from "./tools";
+import { createEventTool, deleteEventTool, getEventsTool, updateEventTool, webSearchTool } from "./tools";
 import { END, MemorySaver, MessagesAnnotation, StateGraph } from "@langchain/langgraph";
 import { ToolNode } from "@langchain/langgraph/prebuilt";
 import type { AIMessage } from "@langchain/core/messages";
@@ -7,7 +7,7 @@ import readline from "readline/promises";
 
 const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
 
-const tools: any = [ createEventTool, getEventsTool, updateEventTool, deleteEventTool ];
+const tools: any = [ createEventTool, getEventsTool, updateEventTool, deleteEventTool, webSearchTool ];
 
 const model = new ChatGroq({
     model: "openai/gpt-oss-120b",
@@ -73,10 +73,25 @@ async function main() {
             messages: [
                 { 
                     role: "system", 
-                    content: `You are a smart personal assisstant. You can help schedule events and check what’s on the calendar. You can also update and delete events in the calendar.
-                        You have access to the provided tools. 
-                        Current date time ${currentDateTime}.
-                        Current timezone string ${localtimeZone}`
+                    // content: `You are a smart personal assisstant. You can help schedule events and check what’s on the calendar. You can also update and delete events in the calendar.
+                    //     Also you can do web search to search the information if don't have in case it is not about the personal calendar but something else.
+                    //     You have access to the provided tools. 
+                    //     Current date time ${currentDateTime}.
+                    //     Current timezone string ${localtimeZone}`
+                    content: `You are a highly capable personal assistant. Your main responsibilities are:
+                    - Creating, updating, and deleting events in the user's calendar.
+                    - Reading the user's upcoming events and helping them plan their schedule.
+                    - Performing web searches only when the user asks for information that is not related to their personal calendar.
+
+                    Use the available tools whenever they can help you complete a request.  
+                    For calendar-related tasks, always prefer the calendar tools.  
+                    For general factual questions or external information, use the web search tool.
+
+                    The current date and time is: ${currentDateTime}  
+                    The user’s timezone is: ${localtimeZone}
+
+                    Always give clear, direct answers. If a tool is required to complete a task, call it.
+                    `
                 },
                 { role: "human", content: userInput },
             ]
